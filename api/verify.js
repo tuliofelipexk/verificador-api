@@ -15,10 +15,13 @@ async function getDatabase() {
         headers.forEach((header, index) => {
             entry[header] = values[index];
         });
+        
         // A chave principal é o e-mail do usuário
         data[entry.email_usuario.toLowerCase()] = {
             login: entry.login_acesso,
-            senha: entry.senha_acesso
+            // --- CORREÇÃO APLICADA AQUI ---
+            // A linha abaixo agora "limpa" a senha, removendo aspas do início ou fim.
+            senha: entry.senha_acesso.replace(/^"|"$/g, '')
         };
     }
     return data;
