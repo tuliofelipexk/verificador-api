@@ -1,5 +1,5 @@
 // URL da sua planilha publicada como CSV
-const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv';
+const sheetUrl = 'COLE_AQUI_O_SEU_LINK_PUBLICADO_DA_PLANILHA';
 
 // Função para buscar e processar os dados da planilha
 async function getDatabase() {
@@ -16,11 +16,8 @@ async function getDatabase() {
             entry[header] = values[index];
         });
         
-        // A chave principal é o e-mail do usuário
         data[entry.email_usuario.toLowerCase()] = {
             login: entry.login_acesso,
-            // --- CORREÇÃO APLICADA AQUI ---
-            // A linha abaixo agora "limpa" a senha, removendo aspas do início ou fim.
             senha: entry.senha_acesso.replace(/^"|"$/g, '')
         };
     }
@@ -29,11 +26,18 @@ async function getDatabase() {
 
 // Função principal da API
 export default async function handler(request, response) {
+    // --- LINHA NOVA ADICIONADA AQUI ---
+    const ip = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+
     response.setHeader('Access-Control-Allow-Origin', '*');
 
     try {
         const database = await getDatabase();
         const userEmail = request.query.email?.toLowerCase();
+
+        // --- LINHA NOVA ADICIONADA AQUI ---
+        // Isso vai registrar o e-mail e o IP no log da Vercel, que só você pode ver.
+        console.log(`Tentativa de acesso para o e-mail: ${userEmail} do IP: ${ip}`);
 
         if (!userEmail) {
             return response.status(400).json({ error: 'Nenhum e-mail fornecido.' });
