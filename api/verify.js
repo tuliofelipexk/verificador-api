@@ -1,5 +1,5 @@
 // URL da sua planilha publicada como CSV
-const sheetUrl = 'COLE_AQUI_O_SEU_LINK_PUBLICADO_DA_PLANILHA';
+const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pubhtml';
 
 // Função para buscar e processar os dados da planilha
 async function getDatabase() {
