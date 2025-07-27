@@ -26,8 +26,24 @@ async function getDatabase() {
 
 // Função principal da API
 export default async function handler(request, response) {
-    // --- LINHA NOVA ADICIONADA AQUI ---
+    // Captura o IP do usuário
     const ip = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+    
+    // --- INÍCIO DAS NOVAS LINHAS PARA GEOLOCALIZAÇÃO ---
+    let location = 'Localização indisponível'; // Valor padrão
+    try {
+        // Pergunta ao serviço de geolocalização sobre o IP
+        const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
+        const geoData = await geoResponse.json();
+        // Formata a resposta se for bem-sucedida
+        if (geoData.status === 'success') {
+            location = `${geoData.city}, ${geoData.regionName}, ${geoData.country}`;
+        }
+    } catch (e) {
+        // Se a busca de localização falhar, o valor padrão será usado.
+        console.error("Erro ao buscar geolocalização:", e);
+    }
+    // --- FIM DAS NOVAS LINHAS ---
 
     response.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -35,9 +51,8 @@ export default async function handler(request, response) {
         const database = await getDatabase();
         const userEmail = request.query.email?.toLowerCase();
 
-        // --- LINHA NOVA ADICIONADA AQUI ---
-        // Isso vai registrar o e-mail e o IP no log da Vercel, que só você pode ver.
-        console.log(`Tentativa de acesso para o e-mail: ${userEmail} do IP: ${ip}`);
+        // Modificamos o log para incluir a localização
+        console.log(`Tentativa de acesso para o e-mail: ${userEmail} do IP: ${ip} (Localização: ${location})`);
 
         if (!userEmail) {
             return response.status(400).json({ error: 'Nenhum e-mail fornecido.' });
