@@ -1,9 +1,9 @@
 // --- PASSO IMPORTANTE ABAIXO ---
 // Cole aqui o link do seu NOVO Zap (o que vai para a planilha de logs)
-const zapierLogWebhookUrl = 'COLE_AQUI_O_LINK_DO_SEU_NOVO_WEBHOOK_DO_ZAPIER';
+const zapierLogWebhookUrl = https://hooks.zapier.com/hooks/catch/23979142/uu0xbe9/;
 
 // URL da sua planilha de clientes
-const sheetUrl = 'COLE_AQUI_O_SEU_LINK_PUBLICADO_DA_PLANILHA_DE_CLIENTES';
+const sheetUrl = https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv;
 
 // --- NOVA FUNÇÃO PARA ENVIAR LOGS PARA O ZAPIER ---
 async function logToZapier(logData) {
