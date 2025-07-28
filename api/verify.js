@@ -1,15 +1,14 @@
-// --- PASSO IMPORTANTE ABAIXO ---
-// Cole aqui o link do seu NOVO Zap (o que vai para a planilha de logs)
-const zapierLogWebhookUrl = https://hooks.zapier.com/hooks/catch/23979142/uu0xbe9/;
+// --- IMPORTANT STEP BELOW ---
+// Paste the link from your NEW Zap (the one for the log sheet) here
+const zapierLogWebhookUrl = 'https://ganchos.zapier.com/ganchos/pegar/23979142/uu0xbe9/';
 
-// URL da sua planilha de clientes
-const sheetUrl = https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv;
+// URL of your client spreadsheet
+const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv';
 
-// --- NOVA FUNÇÃO PARA ENVIAR LOGS PARA O ZAPIER ---
+// --- NEW FUNCTION TO SEND LOGS TO ZAPIER ---
 async function logToZapier(logData) {
-    // Só tenta enviar o log se uma URL foi configurada
     if (!zapierLogWebhookUrl || zapierLogWebhookUrl.includes('COLE_AQUI')) {
-        return; // Não faz nada se a URL não estiver configurada
+        return; // Does nothing if the URL is not configured
     }
     try {
         await fetch(zapierLogWebhookUrl, {
@@ -18,17 +17,13 @@ async function logToZapier(logData) {
             body: JSON.stringify(logData)
         });
     } catch (e) {
-        // Se a chamada para o Zapier falhar, registra o erro no log da Vercel,
-        // mas não impede o funcionamento principal da API.
-        console.error("Erro ao enviar log para o Zapier:", e);
+        console.error("Error sending log to Zapier:", e);
     }
 }
-// --- FIM DA NOVA FUNÇÃO ---
+// --- END OF NEW FUNCTION ---
 
-
-// Função para buscar e processar os dados da planilha de clientes
+// Function to fetch and process data from the client spreadsheet
 async function getDatabase() {
-    // ... (Esta função não muda)
     const response = await fetch(sheetUrl);
     const csvText = await response.text();
     const rows = csvText.trim().split('\n');
@@ -48,33 +43,32 @@ async function getDatabase() {
     return data;
 }
 
-// Função principal da API
+// Main API function
 export default async function handler(request, response) {
     const ip = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
     const userAgent = request.headers['user-agent'];
     const userEmail = request.query.email?.toLowerCase();
     
-    let location = 'Localização indisponível';
+    let location = 'Location unavailable';
     try {
         const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
         const geoData = await geoResponse.json();
         if (geoData.status === 'success') {
             location = `${geoData.city}, ${geoData.regionName}, ${geoData.country}`;
         }
-    } catch (e) { console.error("Erro ao buscar geolocalização:", e); }
+    } catch (e) { console.error("Error fetching geolocation:", e); }
     
     response.setHeader('Access-Control-Allow-Origin', '*');
 
     try {
         const database = await getDatabase();
         if (!userEmail) {
-            return response.status(400).json({ error: 'Nenhum e-mail fornecido.' });
+            return response.status(400).json({ error: 'No email provided.' });
         }
 
         const userData = database[userEmail];
-        const status = userData ? 'ENCONTRADO' : 'FALHA (Não Encontrado)';
+        const status = userData ? 'FOUND' : 'FAILED (Not Found)';
         
-        // Prepara o pacote de dados para o log
         const logData = {
             timestamp: new Date().toISOString(),
             status: status,
@@ -84,27 +78,26 @@ export default async function handler(request, response) {
             dispositivo: userAgent
         };
 
-        // Envia os dados para o Zapier e para o console da Vercel
         logToZapier(logData);
-        console.log(`[${logData.timestamp}] FIM - Status: ${logData.status} | E-mail: ${userEmail} | IP: ${ip}`);
+        console.log(`[${logData.timestamp}] END - Status: ${logData.status} | Email: ${userEmail} | IP: ${ip}`);
 
         if (userData) {
             return response.status(200).json(userData);
         } else {
-            return response.status(404).json({ error: 'E-mail não encontrado.' });
+            return response.status(404).json({ error: 'Email not found.' });
         }
 
     } catch (error) {
         const logData = {
             timestamp: new Date().toISOString(),
-            status: 'ERRO CRÍTICO',
+            status: 'CRITICAL ERROR',
             email_consultado: userEmail,
             ip: ip,
             localizacao: location,
             dispositivo: userAgent
         };
         logToZapier(logData);
-        console.error(`[${logData.timestamp}] ERRO CRÍTICO`, error);
-        return response.status(500).json({ error: 'Falha ao ler a base de dados.' });
+        console.error(`[${logData.timestamp}] CRITICAL ERROR`, error);
+        return response.status(500).json({ error: 'Failed to read the database.' });
     }
 }
