@@ -1,28 +1,27 @@
-// --- IMPORTANT STEP BELOW ---
-// Paste the link from your NEW Zap (the one for the log sheet) here
+// Seus links aqui
 const zapierLogWebhookUrl = 'https://ganchos.zapier.com/ganchos/pegar/23979142/uu0xbe9/';
-
-// URL of your client spreadsheet
 const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv';
 
-// --- NEW FUNCTION TO SEND LOGS TO ZAPIER ---
+// --- FUNÇÃO DE LOG ATUALIZADA ---
 async function logToZapier(logData) {
     if (!zapierLogWebhookUrl || zapierLogWebhookUrl.includes('COLE_AQUI')) {
-        return; // Does nothing if the URL is not configured
+        return;
     }
+
+    // Transforma os dados em parâmetros de URL
+    const queryParams = new URLSearchParams(logData).toString();
+    const fullUrl = `${zapierLogWebhookUrl}?${queryParams}`;
+
     try {
-        await fetch(zapierLogWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(logData)
-        });
+        // Envia os dados como uma simples requisição GET
+        await fetch(fullUrl);
     } catch (e) {
         console.error("Error sending log to Zapier:", e);
     }
 }
-// --- END OF NEW FUNCTION ---
+// --- FIM DA ATUALIZAÇÃO ---
 
-// Function to fetch and process data from the client spreadsheet
+// Função getDatabase (não muda)
 async function getDatabase() {
     const response = await fetch(sheetUrl);
     const csvText = await response.text();
@@ -43,7 +42,7 @@ async function getDatabase() {
     return data;
 }
 
-// Main API function
+// Função handler (não muda)
 export default async function handler(request, response) {
     const ip = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
     const userAgent = request.headers['user-agent'];
