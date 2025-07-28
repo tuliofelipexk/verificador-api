@@ -1,13 +1,15 @@
-// Link do seu NOVO Zap (o que vai para a planilha de logs)
-const zapierLogWebhookUrl = 'https://hooks.zapier.com/hooks/catch/23979142/uu0xbe9/';
+// --- PASSO IMPORTANTE ABAIXO ---
+// Cole aqui o link do seu NOVO Zap (o que vai para a planilha de logs)
+const zapierLogWebhookUrl = 'COLE_AQUI_O_LINK_DO_SEU_NOVO_WEBHOOK_DO_ZAPIER';
 
 // URL da sua planilha de clientes
-const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRX0Wp5GQWV-dq8kMjAnYEVoN9XJA6da0n5hgddehgOtRA3kZkN6diTqqjqh4i_luDtOTv4IauJypgn/pub?output=csv';
+const sheetUrl = 'COLE_AQUI_O_SEU_LINK_PUBLICADO_DA_PLANILHA_DE_CLIENTES';
 
 // --- NOVA FUNÇÃO PARA ENVIAR LOGS PARA O ZAPIER ---
 async function logToZapier(logData) {
+    // Só tenta enviar o log se uma URL foi configurada
     if (!zapierLogWebhookUrl || zapierLogWebhookUrl.includes('COLE_AQUI')) {
-        return;
+        return; // Não faz nada se a URL não estiver configurada
     }
     try {
         await fetch(zapierLogWebhookUrl, {
@@ -16,12 +18,17 @@ async function logToZapier(logData) {
             body: JSON.stringify(logData)
         });
     } catch (e) {
+        // Se a chamada para o Zapier falhar, registra o erro no log da Vercel,
+        // mas não impede o funcionamento principal da API.
         console.error("Erro ao enviar log para o Zapier:", e);
     }
 }
+// --- FIM DA NOVA FUNÇÃO ---
+
 
 // Função para buscar e processar os dados da planilha de clientes
 async function getDatabase() {
+    // ... (Esta função não muda)
     const response = await fetch(sheetUrl);
     const csvText = await response.text();
     const rows = csvText.trim().split('\n');
@@ -49,10 +56,10 @@ export default async function handler(request, response) {
     
     let location = 'Localização indisponível';
     try {
-        const geoResponse = await fetch(http://ip-api.com/json/${ip});
+        const geoResponse = await fetch(`http://ip-api.com/json/${ip}`);
         const geoData = await geoResponse.json();
         if (geoData.status === 'success') {
-            location = ${geoData.city}, ${geoData.regionName}, ${geoData.country};
+            location = `${geoData.city}, ${geoData.regionName}, ${geoData.country}`;
         }
     } catch (e) { console.error("Erro ao buscar geolocalização:", e); }
     
@@ -67,6 +74,7 @@ export default async function handler(request, response) {
         const userData = database[userEmail];
         const status = userData ? 'ENCONTRADO' : 'FALHA (Não Encontrado)';
         
+        // Prepara o pacote de dados para o log
         const logData = {
             timestamp: new Date().toISOString(),
             status: status,
@@ -76,8 +84,9 @@ export default async function handler(request, response) {
             dispositivo: userAgent
         };
 
+        // Envia os dados para o Zapier e para o console da Vercel
         logToZapier(logData);
-        console.log([${logData.timestamp}] FIM - Status: ${logData.status} | E-mail: ${userEmail} | IP: ${ip});
+        console.log(`[${logData.timestamp}] FIM - Status: ${logData.status} | E-mail: ${userEmail} | IP: ${ip}`);
 
         if (userData) {
             return response.status(200).json(userData);
@@ -95,7 +104,7 @@ export default async function handler(request, response) {
             dispositivo: userAgent
         };
         logToZapier(logData);
-        console.error([${logData.timestamp}] ERRO CRÍTICO, error);
+        console.error(`[${logData.timestamp}] ERRO CRÍTICO`, error);
         return response.status(500).json({ error: 'Falha ao ler a base de dados.' });
     }
 }
